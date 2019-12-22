@@ -1,4 +1,4 @@
-class Model {
+/* class Model {
     constructor() {
         this.todos = [
             { id: 1, text: 'Wake up Early', complete: false },
@@ -28,6 +28,4 @@ class Model {
     toggleTodo(id) {
         this.todos = this.todos.map((todo) => todo.id === id ? { id, text: todo.text, complete: !todo.complete } : todo)
     }
-}
-
-module.exports = new Model() 
+} */
