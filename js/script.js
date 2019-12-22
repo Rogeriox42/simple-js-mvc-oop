@@ -8,25 +8,28 @@ class Model {
     }
 
     addTodo(todoText) {
-        const newTodo = {
-            id: this.todos.length + 1,
-            text: todoText,
-            complete: false
-        }
-
+        const newTodo = { id: this.todos.length + 1, text: todoText, complete: false }
         this.todos.push(newTodo)
+        this.onTodoListChanged(this.todos)
     }
 
     editTodo(id, todoText) {
         this.todos = this.todos.map((todo) => todo.id === id ? { id, text: todoText, complete: todo.complete } : todo)
+        this.onTodoListChanged(this.todos)
     }
 
     deleteTodo(id) {
         this.todos = this.todos.filter((item) => item.id === id ? false : item)
+        this.onTodoListChanged(this.todos)
     }
 
     toggleTodo(id) {
         this.todos = this.todos.map((todo) => todo.id === id ? { id, text: todo.text, complete: !todo.complete } : todo)
+        this.onTodoListChanged(this.todos)
+    }
+
+    bindTodoListChanged(callback) {
+        this.onTodoListChanged = callback
     }
 }
 
@@ -86,7 +89,7 @@ class View {
             const p = this.createElement('p')
             p.textContent = 'Nothing to do! Ask a task?'
             this.todoList.append(p)
-            
+
         } else {
 
             todos.forEach(todo => {
@@ -111,21 +114,81 @@ class View {
                 }
 
                 const deleteButton = this.createElement('button', 'delete')
-                deleteButton.textContent = 'Delete' 
-                li.append(checkbox, span, deleteButton) 
+                deleteButton.textContent = 'Delete'
+                li.append(checkbox, span, deleteButton)
 
                 this.todoList.append(li)
             })
 
         }
     }
+
+    bindAddTodo(handler) {
+        this.form.addEventListener('submit', event => {
+            event.preventDefault()
+
+            if (this._todoText) {
+                handler(this._todoText)
+                this._resetInput()
+            }
+        })
+    }
+
+    bindDeleteTodo(handler) {
+        this.todoList.addEventListener('click', event => {
+            if (event.target.className == 'delete') { // Unnecessary check | Refactor suggestion | Actually important 
+                const id = parseInt(event.target.parentElement.id)
+                handler(id)
+            }
+        })
+    }
+
+    bindToggleTodo(handler) {
+        this.todoList.addEventListener('change', event => {
+            if (event.target.type == 'checkbox') { // Unnecessary check | Refactor suggestion | Actually important 
+                const id = parseInt(event.target.parentElement.id)
+                handler(id)
+            }
+        })
+    }
 }
+
+// As we currently don't have the controllers to bind the model and the view, run the command app.view.displayTodos(app.model.todos) to update the interface git
 
 class Controller {
     constructor(model, view) {
         this.model = model
         this.view = view
+        this.onTodoListChanged(this.model.todos)
+
+        this.view.bindAddTodo(this.handleAddTodo)
+        this.view.bindDeleteTodo(this.handleDeleteTodo)
+        this.view.bindToggleTodo(this.handleToggleTodo)
+
+        this.model.bindTodoListChanged(this.onTodoListChanged)
     }
+
+    onTodoListChanged = todos => {
+        this.view.displayTodos(todos)
+    }
+
+    handleAddTodo = todoText => {
+        this.model.addTodo(todoText)
+    }
+
+    handleEditTodo = (id, editText) => {
+        this.model.editTodo(id, editText)
+    }
+
+    handleDeleteTodo = id => {
+        this.model.deleteTodo(id)
+    }
+
+    handleToggleTodo = id => {
+        this.model.toggleTodo(id)
+    }
+
+
 }
 
 const app = new Controller(new Model(), new View())
