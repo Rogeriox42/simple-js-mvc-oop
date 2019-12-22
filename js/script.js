@@ -1,31 +1,38 @@
 class Model {
     constructor() {
-        this.todos = [
-            { id: 1, text: 'Wake up Early', complete: false },
-            { id: 2, text: 'Do the Dishes', complete: false },
-            { id: 3, text: 'Answer Emails', complete: true }
-        ]
+        // this.todos = [
+        //     { id: 1, text: 'Wake up Early', complete: false },
+        //     { id: 2, text: 'Do the Dishes', complete: false },
+        //     { id: 3, text: 'Answer Emails', complete: true }
+        // ]
+
+        this.todos = JSON.parse(localStorage.getItem('todos')) || [] 
+    }
+
+    _commit(todos){
+        this.onTodoListChanged(todos)
+        localStorage.setItem('todos', JSON.stringify(todos)) 
     }
 
     addTodo(todoText) {
         const newTodo = { id: this.todos.length + 1, text: todoText, complete: false }
         this.todos.push(newTodo)
-        this.onTodoListChanged(this.todos)
+        this._commit(this.todos) 
     }
 
     editTodo(id, todoText) {
         this.todos = this.todos.map((todo) => todo.id === id ? { id, text: todoText, complete: todo.complete } : todo)
-        this.onTodoListChanged(this.todos)
+        this._commit(this.todos) 
     }
 
     deleteTodo(id) {
         this.todos = this.todos.filter((item) => item.id === id ? false : item)
-        this.onTodoListChanged(this.todos)
+        this._commit(this.todos) 
     }
 
     toggleTodo(id) {
         this.todos = this.todos.map((todo) => todo.id === id ? { id, text: todo.text, complete: !todo.complete } : todo)
-        this.onTodoListChanged(this.todos)
+        this._commit(this.todos) 
     }
 
     bindTodoListChanged(callback) {
@@ -49,13 +56,16 @@ class View {
 
         this.submitButton = this.createElement('button')
         this.submitButton.type = 'submit'
-        this.submitButton.textContent = 'aaaaa'
+        this.submitButton.textContent = 'Submit'
 
         this.todoList = this.createElement('ul', 'todo-list')
 
         this.form.append(this.input, this.submitButton)
 
         this.app.append(this.title, this.form, this.todoList)
+
+        this._temporaryTodoText 
+        this._initLocalListeners() 
 
 
     }
@@ -152,6 +162,24 @@ class View {
             }
         })
     }
+
+    _initLocalListeners(){
+        this.todoList.addEventListener('input', event => {
+            if(event.target.className === 'editable'){
+                this._temporaryTodoText = event.target.innerText
+            }
+        })
+    }
+
+    bindEditTodo(handler){
+        this.todoList.addEventListener('focusout', event => {
+            if(this._temporaryTodoText){
+                const id = parseInt(event.target.parentElement.id) 
+                handler(id, this._temporaryTodoText) 
+                this._temporaryTodoText = ''
+            }
+        })
+    }
 }
 
 // As we currently don't have the controllers to bind the model and the view, run the command app.view.displayTodos(app.model.todos) to update the interface git
@@ -165,6 +193,7 @@ class Controller {
         this.view.bindAddTodo(this.handleAddTodo)
         this.view.bindDeleteTodo(this.handleDeleteTodo)
         this.view.bindToggleTodo(this.handleToggleTodo)
+        this.view.bindEditTodo(this.handleEditTodo)
 
         this.model.bindTodoListChanged(this.onTodoListChanged)
     }
