@@ -48,7 +48,8 @@ class View {
         this.input.name = 'todo'
 
         this.submitButton = this.createElement('button')
-        this.submitButton.textContent = 'Submit'
+        this.submitButton.type = 'submit'
+        this.submitButton.textContent = 'aaaaa'
 
         this.todoList = this.createElement('ul', 'todo-list')
 
@@ -127,8 +128,8 @@ class View {
         this.form.addEventListener('submit', event => {
             event.preventDefault()
 
-            if (this._todoText) {
-                handler(this._todoText)
+            if (this.todoText) {                
+                handler(this.todoText)
                 this._resetInput()
             }
         })
